@@ -233,17 +233,15 @@ const SettingsPage = () => {
         </div>
 
         <div className="card danger-zone">
-          <h2>⚠️ Vùng Nguy Hiểm</h2>
-          <p className="section-description">
-            Các thao tác này không thể hoàn tác. Hãy cẩn thận!
-          </p>
-
           <button
             className="reset-button"
             onClick={() => setShowResetConfirm(true)}
           >
             Đặt Lại Hệ Thống
           </button>
+          <p className="section-description">
+            Các thao tác này không thể hoàn tác.!
+          </p>
         </div>
 
         {showResetConfirm && (

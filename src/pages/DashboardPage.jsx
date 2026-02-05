@@ -145,12 +145,12 @@ const DashboardPage = () => {
         </div>
 
         <div className="history-section card">
-          <h2>📜 Lịch Sử Quay Gần Đây</h2>
+          <h2>📜 Lịch Sử Quay Toàn Bộ ({spinHistory.length} lượt)</h2>
           {spinHistory.length === 0 ? (
             <p className="no-data">Chưa có lượt quay nào.</p>
           ) : (
             <div className="history-list">
-              {spinHistory.slice(0, 10).map((spin, index) => (
+              {spinHistory.map((spin, index) => (
                 <div key={index} className="history-item">
                   <div className="history-time">
                     {new Date(spin.timestamp).toLocaleString("vi-VN")}
