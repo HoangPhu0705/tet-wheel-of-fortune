@@ -8,6 +8,7 @@ const WheelComponent = ({ onSpinComplete, wheelUpdateRef }) => {
   const [isSpinning, setIsSpinning] = useState(false);
   const wheelContainerRef = useRef(null);
   const wheelInstanceRef = useRef(null);
+  const justFinishedSpinning = useRef(false);
 
   // Function to update the wheel
   const updateWheel = () => {
@@ -40,6 +41,12 @@ const WheelComponent = ({ onSpinComplete, wheelUpdateRef }) => {
 
   useEffect(() => {
     if (!wheelContainerRef.current) return;
+
+    // Don't update if we just finished spinning
+    if (justFinishedSpinning.current) {
+      justFinishedSpinning.current = false;
+      return;
+    }
 
     // Get all prizes for display
     const displayPrizes = getAllPrizesForDisplay();
@@ -140,6 +147,7 @@ const WheelComponent = ({ onSpinComplete, wheelUpdateRef }) => {
 
     // Show result after animation
     setTimeout(() => {
+      justFinishedSpinning.current = true;
       setIsSpinning(false);
 
       // Wait 1.5 seconds before showing the modal so users can see the result
