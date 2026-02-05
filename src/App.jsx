@@ -8,7 +8,7 @@ import "./App.css";
 function App() {
   return (
     <PrizeProvider>
-      <Router basename="/tet-wheel-of-fortune">
+      <Router basename="/tet-wheel-of-fortune/">
         <div className="app">
           <nav className="navbar">
             <div className="nav-container">

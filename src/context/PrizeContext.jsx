@@ -145,6 +145,12 @@ export const PrizeProvider = ({ children }) => {
 
   const remainingBudget = totalBudget - spentAmount;
 
+  // Get all prizes with quantity > 0 for DISPLAY on wheel (ignores restrictions)
+  const getAllPrizesForDisplay = () => {
+    return prizes.filter((prize) => prize.quantity > 0);
+  };
+
+  // Get available prizes for SELECTION (applies high-value restrictions)
   const getAvailablePrizes = () => {
     const available = prizes.filter((prize) => prize.quantity > 0);
 
@@ -262,6 +268,7 @@ export const PrizeProvider = ({ children }) => {
     updatePrize,
     resetSystem,
     getAvailablePrizes,
+    getAllPrizesForDisplay,
     betterLuckOption: BETTER_LUCK_OPTION,
   };
 

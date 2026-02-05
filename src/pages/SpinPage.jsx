@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import Wheel from "../components/Wheel";
 import "./SpinPage.css";
 
 const SpinPage = () => {
   const [result, setResult] = useState(null);
   const [showResult, setShowResult] = useState(false);
+  const wheelUpdateRef = useRef(null);
 
   const handleSpinComplete = (prize) => {
     setResult(prize);
@@ -14,6 +15,11 @@ const SpinPage = () => {
   const handleCloseResult = () => {
     setShowResult(false);
     setResult(null);
+
+    // Update the wheel after closing the modal
+    if (wheelUpdateRef.current) {
+      wheelUpdateRef.current();
+    }
   };
 
   return (
@@ -26,7 +32,10 @@ const SpinPage = () => {
           </p>
         </div>
 
-        <Wheel onSpinComplete={handleSpinComplete} />
+        <Wheel
+          onSpinComplete={handleSpinComplete}
+          wheelUpdateRef={wheelUpdateRef}
+        />
 
         <div className="info-card">
           <h3>🧧 Quy tắc chương trình:</h3>
