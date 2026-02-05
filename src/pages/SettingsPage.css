@@ -1,0 +1,278 @@
+.settings-page {
+    min-height: calc(100vh - 70px);
+    padding: 20px;
+}
+
+.page-title {
+    text-align: center;
+    color: white;
+    font-size: 36px;
+    margin-bottom: 30px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.error-banner {
+    background: #ffebee;
+    border: 2px solid #f44336;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #c62828;
+    font-weight: 600;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.error-icon {
+    font-size: 24px;
+}
+
+.budget-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.budget-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: #f5f5f5;
+    border-radius: 8px;
+}
+
+.budget-label {
+    font-weight: 600;
+    color: #555;
+}
+
+.budget-value {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+}
+
+.budget-value.highlight {
+    color: #ff3b3f;
+    font-size: 20px;
+}
+
+.section-description {
+    color: #666;
+    margin-bottom: 24px;
+    line-height: 1.6;
+}
+
+.prizes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.prize-config-card {
+    background: #f9f9f9;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid #e0e0e0;
+    transition: transform 0.3s ease;
+}
+
+.prize-config-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+}
+
+.prize-header {
+    padding: 16px;
+    text-align: center;
+    color: white;
+}
+
+.prize-header h3 {
+    margin: 0;
+    color: white;
+    font-size: 20px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.prize-config-body {
+    padding: 20px;
+}
+
+.prize-total-value {
+    background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+    border-left: 4px solid #2196f3;
+    padding: 10px 12px;
+    margin-bottom: 16px;
+    border-radius: 6px;
+    font-weight: 600;
+    color: #1565c0;
+    font-size: 14px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #333;
+}
+
+.form-group input[type="number"],
+.form-group textarea {
+    width: 100%;
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 60px;
+    font-family: inherit;
+}
+
+.form-group input[type="checkbox"] {
+    width: auto;
+    margin-right: 8px;
+}
+
+.color-picker-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.color-picker-group input[type="color"] {
+    width: 60px;
+    height: 40px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.color-value {
+    font-family: monospace;
+    color: #666;
+    font-size: 14px;
+}
+
+.high-value-config {
+    max-width: 600px;
+}
+
+.info-box {
+    background: #E3F2FD;
+    border-left: 4px solid #2196F3;
+    padding: 16px;
+    border-radius: 6px;
+    margin-top: 20px;
+}
+
+.info-box p {
+    margin: 0;
+    color: #1565C0;
+    line-height: 1.6;
+}
+
+.danger-zone {
+    border: 2px solid #FF3B3F;
+    background: #FFF5F5;
+}
+
+.reset-button {
+    background: #FF3B3F;
+    color: white;
+    padding: 14px 28px;
+    font-size: 16px;
+}
+
+.reset-button:hover {
+    background: #E63946;
+}
+
+/* Confirm Modal */
+.confirm-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.confirm-modal {
+    background: white;
+    border-radius: 16px;
+    padding: 32px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.confirm-modal h3 {
+    margin-top: 0;
+    color: #FF3B3F;
+    font-size: 24px;
+    margin-bottom: 16px;
+}
+
+.confirm-modal p {
+    color: #555;
+    line-height: 1.6;
+    margin-bottom: 24px;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.cancel-button {
+    background: #ddd;
+    color: #333;
+}
+
+.cancel-button:hover {
+    background: #ccc;
+}
+
+.confirm-button {
+    background: #FF3B3F;
+    color: white;
+}
+
+.confirm-button:hover {
+    background: #E63946;
+}
+
+@media (max-width: 768px) {
+    .prizes-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .page-title {
+        font-size: 28px;
+    }
+}
