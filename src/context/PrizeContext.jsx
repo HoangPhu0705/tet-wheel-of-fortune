@@ -111,7 +111,12 @@ export const PrizeProvider = ({ children }) => {
     const saved = localStorage.getItem("highValueCondition");
     return saved
       ? JSON.parse(saved)
-      : { minSpins: 10, maxSpins: 20, enabled: true };
+      : {
+          minSpins: 10,
+          maxSpins: 20,
+          enabled: true,
+          restrictedPrizes: [500000, 400000, 300000],
+        };
   });
 
   // Save to localStorage whenever state changes
@@ -143,15 +148,14 @@ export const PrizeProvider = ({ children }) => {
   const getAvailablePrizes = () => {
     const available = prizes.filter((prize) => prize.quantity > 0);
 
-    // Apply high-value conditional logic for 500k prize
-    if (highValueCondition.enabled) {
-      const highValuePrize = available.find((p) => p.value === 500000);
-      if (highValuePrize) {
-        if (highValueSpinCount < highValueCondition.minSpins) {
-          // Remove 500k from available options
-          return available.filter((p) => p.value !== 500000);
-        }
-      }
+    // Apply high-value conditional logic for restricted prizes
+    if (
+      highValueCondition.enabled &&
+      highValueSpinCount < highValueCondition.minSpins
+    ) {
+      // Filter out all restricted prizes (500K, 400K, 300K by default)
+      const restrictedValues = highValueCondition.restrictedPrizes || [500000];
+      return available.filter((p) => !restrictedValues.includes(p.value));
     }
 
     return available;

@@ -61,6 +61,20 @@ const SettingsPage = () => {
     }));
   };
 
+  const handleRestrictedPrizeToggle = (prizeValue) => {
+    setHighValueCondition((prev) => {
+      const restrictedPrizes = prev.restrictedPrizes || [500000];
+      const isRestricted = restrictedPrizes.includes(prizeValue);
+
+      return {
+        ...prev,
+        restrictedPrizes: isRestricted
+          ? restrictedPrizes.filter((v) => v !== prizeValue)
+          : [...restrictedPrizes, prizeValue],
+      };
+    });
+  };
+
   const handleReset = () => {
     resetSystem();
     setShowResetConfirm(false);
@@ -174,7 +188,8 @@ const SettingsPage = () => {
         <div className="card">
           <h2>🎯 Điều Kiện Giải Cao</h2>
           <p className="section-description">
-            Cấu hình logic phân phối giải 500K để kiểm soát sự công bằng
+            Cấu hình logic phân phối giải cao (500K, 400K, 300K) để kiểm soát sự
+            công bằng
           </p>
 
           <div className="high-value-config">
@@ -187,15 +202,48 @@ const SettingsPage = () => {
                     handleHighValueConditionChange("enabled", e.target.checked)
                   }
                 />
-                Bật điều kiện giới hạn giải 500K
+                Bật điều kiện giới hạn giải cao
               </label>
             </div>
 
             {highValueCondition.enabled && (
               <>
                 <div className="form-group">
+                  <label>Chọn các giải áp dụng điều kiện:</label>
+                  <div
+                    style={{ display: "flex", gap: "15px", marginTop: "10px" }}
+                  >
+                    {[
+                      { value: 500000, label: "500K" },
+                      { value: 400000, label: "400K" },
+                      { value: 300000, label: "300K" },
+                    ].map((prize) => (
+                      <label
+                        key={prize.value}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "5px",
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={(
+                            highValueCondition.restrictedPrizes || [500000]
+                          ).includes(prize.value)}
+                          onChange={() =>
+                            handleRestrictedPrizeToggle(prize.value)
+                          }
+                        />
+                        {prize.label}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="form-group">
                   <label>
-                    Số lượt quay tối thiểu trước khi có thể trúng 500K:
+                    Số lượt quay tối thiểu trước khi có thể trúng giải cao:
                   </label>
                   <input
                     type="number"
@@ -221,7 +269,11 @@ const SettingsPage = () => {
 
                 <div className="info-box">
                   <p>
-                    ℹ️ Giải 500K sẽ chỉ xuất hiện sau{" "}
+                    ℹ️ Các giải đã chọn (
+                    {(highValueCondition.restrictedPrizes || [500000])
+                      .map((v) => v / 1000 + "K")
+                      .join(", ")}
+                    ) sẽ chỉ xuất hiện sau{" "}
                     <strong>{highValueCondition.minSpins}</strong> lượt quay và
                     bộ đếm sẽ được đặt lại sau{" "}
                     <strong>{highValueCondition.maxSpins}</strong> lượt.

@@ -20,7 +20,7 @@ const SpinPage = () => {
     <div className="spin-page">
       <div className="container">
         <div className="header-section">
-          <h1 className="page-title">🎊 Vòng Quay May Mắn Tết 2026 🎊</h1>
+          <h1 className="page-title">🧧 Khai Xuân Đón Lộc 🧧</h1>
           <p className="page-subtitle">
             Chúc mừng năm mới! Hãy thử vận may của bạn!
           </p>
