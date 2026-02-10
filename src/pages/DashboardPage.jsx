@@ -152,6 +152,9 @@ const DashboardPage = () => {
             <div className="history-list">
               {spinHistory.map((spin, index) => (
                 <div key={index} className="history-item">
+                  <div className="history-spin-number">
+                    #{spin.spinNumber || spinHistory.length - index}
+                  </div>
                   <div className="history-time">
                     {new Date(spin.timestamp).toLocaleString("vi-VN")}
                   </div>

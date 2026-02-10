@@ -6,14 +6,16 @@ const SettingsPage = () => {
   const {
     prizes,
     updatePrize,
-    highValueCondition,
-    setHighValueCondition,
+    scheduledSpins,
+    setScheduledSpins,
+    currentSpinNumber,
     resetSystem,
     totalBudget,
   } = usePrize();
 
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [budgetError, setBudgetError] = useState("");
+  const [scheduleError, setScheduleError] = useState("");
 
   const calculateTotalPotentialValue = (updatedPrizes) => {
     return updatedPrizes.reduce(
@@ -54,25 +56,51 @@ const SettingsPage = () => {
     updatePrize(prizeId, { message: newMessage });
   };
 
-  const handleHighValueConditionChange = (field, value) => {
-    setHighValueCondition((prev) => ({
+  const handleAddScheduledSpin = (prizeId, spinNumber) => {
+    spinNumber = parseInt(spinNumber);
+
+    if (!spinNumber || spinNumber <= currentSpinNumber) {
+      setScheduleError(
+        `Số lượt quay phải lớn hơn ${currentSpinNumber} (lượt hiện tại)`,
+      );
+      return;
+    }
+
+    // Check if spin number is already scheduled
+    if (scheduledSpins[spinNumber]) {
+      setScheduleError(
+        `Lượt quay ${spinNumber} đã được lên lịch cho giải khác`,
+      );
+      return;
+    }
+
+    // Count how many times this prize is already scheduled
+    const timesScheduled = Object.values(scheduledSpins).filter(
+      (id) => id === prizeId,
+    ).length;
+    const prize = prizes.find((p) => p.id === prizeId);
+
+    if (timesScheduled >= prize.quantity) {
+      setScheduleError(
+        `Không thể lên lịch thêm! Chỉ có ${prize.quantity} giải ${prize.label}`,
+      );
+      return;
+    }
+
+    setScheduleError("");
+    setScheduledSpins((prev) => ({
       ...prev,
-      [field]: field === "enabled" ? value : parseInt(value) || 0,
+      [spinNumber]: prizeId,
     }));
   };
 
-  const handleRestrictedPrizeToggle = (prizeValue) => {
-    setHighValueCondition((prev) => {
-      const restrictedPrizes = prev.restrictedPrizes || [500000];
-      const isRestricted = restrictedPrizes.includes(prizeValue);
-
-      return {
-        ...prev,
-        restrictedPrizes: isRestricted
-          ? restrictedPrizes.filter((v) => v !== prizeValue)
-          : [...restrictedPrizes, prizeValue],
-      };
+  const handleRemoveScheduledSpin = (spinNumber) => {
+    setScheduledSpins((prev) => {
+      const newSchedule = { ...prev };
+      delete newSchedule[spinNumber];
+      return newSchedule;
     });
+    setScheduleError("");
   };
 
   const handleReset = () => {
@@ -110,7 +138,7 @@ const SettingsPage = () => {
               </span>
             </div>
             <div className="budget-item">
-              <span className="budget-label">Còn lại cho "Better Luck":</span>
+              <span className="budget-label">Còn lại:</span>
               <span className="budget-value">
                 {(
                   totalBudget - calculateTotalPotentialValue(prizes)
@@ -186,101 +214,139 @@ const SettingsPage = () => {
         </div>
 
         <div className="card">
-          <h2>🎯 Điều Kiện Giải Cao</h2>
+          <h2>🎯 Lên Lịch Giải Thưởng</h2>
           <p className="section-description">
-            Cấu hình logic phân phối giải cao (500K, 400K, 300K) để kiểm soát sự
-            công bằng
+            Chỉ định chính xác lượt quay nào sẽ trúng giải cao (500K, 400K,
+            300K). Lưu ý: Không thể lên lịch nhiều hơn số lượng giải có sẵn.
           </p>
 
-          <div className="high-value-config">
-            <div className="form-group">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={highValueCondition.enabled}
-                  onChange={(e) =>
-                    handleHighValueConditionChange("enabled", e.target.checked)
-                  }
-                />
-                Bật điều kiện giới hạn giải cao
-              </label>
+          {scheduleError && (
+            <div className="error-banner">
+              <span className="error-icon">⚠️</span>
+              {scheduleError}
             </div>
+          )}
 
-            {highValueCondition.enabled && (
-              <>
-                <div className="form-group">
-                  <label>Chọn các giải áp dụng điều kiện:</label>
+          <div className="info-box" style={{ marginBottom: "20px" }}>
+            <p>
+              📊 Lượt quay hiện tại: <strong>{currentSpinNumber}</strong>
+            </p>
+          </div>
+
+          <div className="schedule-config">
+            {[1, 2, 3].map((index) => {
+              const prize = prizes[index - 1]; // 500K, 400K, 300K
+              const scheduledCount = Object.values(scheduledSpins).filter(
+                (id) => id === prize.id,
+              ).length;
+
+              return (
+                <div key={prize.id} className="prize-schedule-card">
                   <div
-                    style={{ display: "flex", gap: "15px", marginTop: "10px" }}
+                    className="schedule-header"
+                    style={{ backgroundColor: prize.color }}
                   >
-                    {[
-                      { value: 500000, label: "500K" },
-                      { value: 400000, label: "400K" },
-                      { value: 300000, label: "300K" },
-                    ].map((prize) => (
-                      <label
-                        key={prize.value}
+                    <h3>{prize.label}</h3>
+                    <span className="schedule-count">
+                      {scheduledCount}/{prize.quantity} đã lên lịch
+                    </span>
+                  </div>
+
+                  <div className="schedule-body">
+                    {/* Show existing schedules for this prize */}
+                    <div className="scheduled-spins-list">
+                      {Object.entries(scheduledSpins)
+                        .filter(([_, prizeId]) => prizeId === prize.id)
+                        .sort(([a], [b]) => parseInt(a) - parseInt(b))
+                        .map(([spinNum]) => (
+                          <div key={spinNum} className="scheduled-spin-item">
+                            <span>Lượt {spinNum}</span>
+                            <button
+                              className="remove-schedule-btn"
+                              onClick={() => handleRemoveScheduledSpin(spinNum)}
+                              title="Xóa lịch"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ))}
+                      {scheduledCount === 0 && (
+                        <p
+                          style={{
+                            color: "#999",
+                            fontSize: "14px",
+                            fontStyle: "italic",
+                          }}
+                        >
+                          Chưa có lịch nào
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Add new schedule */}
+                    {scheduledCount < prize.quantity ? (
+                      <div className="add-schedule">
+                        <input
+                          type="number"
+                          min={currentSpinNumber + 1}
+                          placeholder="Nhập số lượt quay"
+                          className="schedule-input"
+                          onKeyPress={(e) => {
+                            if (e.key === "Enter") {
+                              handleAddScheduledSpin(prize.id, e.target.value);
+                              e.target.value = "";
+                            }
+                          }}
+                        />
+                        <button
+                          className="add-schedule-btn"
+                          onClick={(e) => {
+                            const input = e.target.previousSibling;
+                            handleAddScheduledSpin(prize.id, input.value);
+                            input.value = "";
+                          }}
+                        >
+                          + Thêm lịch
+                        </button>
+                      </div>
+                    ) : prize.quantity > 0 ? (
+                      <p
                         style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "5px",
+                          color: "#ff9800",
+                          fontSize: "14px",
+                          marginTop: "12px",
+                          fontWeight: "600",
                         }}
                       >
-                        <input
-                          type="checkbox"
-                          checked={(
-                            highValueCondition.restrictedPrizes || [500000]
-                          ).includes(prize.value)}
-                          onChange={() =>
-                            handleRestrictedPrizeToggle(prize.value)
-                          }
-                        />
-                        {prize.label}
-                      </label>
-                    ))}
+                        ✓ Đã lên lịch đủ {prize.quantity} giải
+                      </p>
+                    ) : (
+                      <p
+                        style={{
+                          color: "#999",
+                          fontSize: "14px",
+                          marginTop: "12px",
+                          fontStyle: "italic",
+                        }}
+                      >
+                        Tăng số lượng giải để thêm lịch
+                      </p>
+                    )}
                   </div>
                 </div>
+              );
+            })}
+          </div>
 
-                <div className="form-group">
-                  <label>
-                    Số lượt quay tối thiểu trước khi có thể trúng giải cao:
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={highValueCondition.minSpins}
-                    onChange={(e) =>
-                      handleHighValueConditionChange("minSpins", e.target.value)
-                    }
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label>Đặt lại bộ đếm sau số lượt quay:</label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={highValueCondition.maxSpins}
-                    onChange={(e) =>
-                      handleHighValueConditionChange("maxSpins", e.target.value)
-                    }
-                  />
-                </div>
-
-                <div className="info-box">
-                  <p>
-                    ℹ️ Các giải đã chọn (
-                    {(highValueCondition.restrictedPrizes || [500000])
-                      .map((v) => v / 1000 + "K")
-                      .join(", ")}
-                    ) sẽ chỉ xuất hiện sau{" "}
-                    <strong>{highValueCondition.minSpins}</strong> lượt quay và
-                    bộ đếm sẽ được đặt lại sau{" "}
-                    <strong>{highValueCondition.maxSpins}</strong> lượt.
-                  </p>
-                </div>
-              </>
-            )}
+          <div className="info-box" style={{ marginTop: "20px" }}>
+            <p>
+              ℹ️ Các lượt quay đã lên lịch sẽ trúng giải tương ứng. Các lượt còn
+              lại sẽ quay ngẫu nhiên theo trọng số.
+            </p>{" "}
+            <p style={{ marginTop: "8px", fontSize: "14px", color: "#666" }}>
+              💡 Lịch sẽ tự động xóa khi: (1) lượt quay đã qua, (2) giảm số
+              lượng giải dưới số lịch đã đặt.
+            </p>{" "}
           </div>
         </div>
 

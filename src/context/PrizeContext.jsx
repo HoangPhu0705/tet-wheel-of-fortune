@@ -102,21 +102,16 @@ export const PrizeProvider = ({ children }) => {
     return saved ? JSON.parse(saved) : [];
   });
 
-  const [highValueSpinCount, setHighValueSpinCount] = useState(() => {
-    const saved = localStorage.getItem("highValueSpinCount");
+  const [currentSpinNumber, setCurrentSpinNumber] = useState(() => {
+    const saved = localStorage.getItem("currentSpinNumber");
     return saved ? parseInt(saved) : 0;
   });
 
-  const [highValueCondition, setHighValueCondition] = useState(() => {
-    const saved = localStorage.getItem("highValueCondition");
-    return saved
-      ? JSON.parse(saved)
-      : {
-          minSpins: 10,
-          maxSpins: 20,
-          enabled: true,
-          restrictedPrizes: [500000, 400000, 300000],
-        };
+  // scheduledSpins: { spinNumber: prizeId }
+  // Example: { 5: 1, 12: 1, 8: 2 } means spin 5 and 12 get 500K (id:1), spin 8 gets 400K (id:2)
+  const [scheduledSpins, setScheduledSpins] = useState(() => {
+    const saved = localStorage.getItem("scheduledSpins");
+    return saved ? JSON.parse(saved) : {};
   });
 
   // Save to localStorage whenever state changes
@@ -133,41 +128,84 @@ export const PrizeProvider = ({ children }) => {
   }, [spinHistory]);
 
   useEffect(() => {
-    localStorage.setItem("highValueSpinCount", highValueSpinCount.toString());
-  }, [highValueSpinCount]);
+    localStorage.setItem("currentSpinNumber", currentSpinNumber.toString());
+  }, [currentSpinNumber]);
 
   useEffect(() => {
-    localStorage.setItem(
-      "highValueCondition",
-      JSON.stringify(highValueCondition),
-    );
-  }, [highValueCondition]);
+    localStorage.setItem("scheduledSpins", JSON.stringify(scheduledSpins));
+  }, [scheduledSpins]);
 
   const remainingBudget = totalBudget - spentAmount;
+
+  // Clean up scheduled spins that are no longer valid
+  const cleanupScheduledSpins = () => {
+    setScheduledSpins((prev) => {
+      const cleaned = { ...prev };
+      let modified = false;
+
+      // Remove past spins
+      Object.keys(cleaned).forEach((spinNum) => {
+        if (parseInt(spinNum) <= currentSpinNumber) {
+          delete cleaned[spinNum];
+          modified = true;
+        }
+      });
+
+      // Remove excess schedules if prize quantity decreased
+      prizes.forEach((prize) => {
+        const scheduledForPrize = Object.entries(cleaned).filter(
+          ([_, prizeId]) => prizeId === prize.id,
+        );
+
+        if (scheduledForPrize.length > prize.quantity) {
+          // Keep only the first N schedules (by spin number)
+          const sorted = scheduledForPrize.sort(
+            ([a], [b]) => parseInt(a) - parseInt(b),
+          );
+          sorted.slice(prize.quantity).forEach(([spinNum]) => {
+            delete cleaned[spinNum];
+            modified = true;
+          });
+        }
+      });
+
+      return modified ? cleaned : prev;
+    });
+  };
+
+  // Auto-cleanup when prizes or currentSpinNumber change
+  useEffect(() => {
+    cleanupScheduledSpins();
+  }, [prizes, currentSpinNumber]);
 
   // Get all prizes with quantity > 0 for DISPLAY on wheel (ignores restrictions)
   const getAllPrizesForDisplay = () => {
     return prizes.filter((prize) => prize.quantity > 0);
   };
 
-  // Get available prizes for SELECTION (applies high-value restrictions)
+  // Get available prizes for SELECTION
   const getAvailablePrizes = () => {
-    const available = prizes.filter((prize) => prize.quantity > 0);
-
-    // Apply high-value conditional logic for restricted prizes
-    if (
-      highValueCondition.enabled &&
-      highValueSpinCount < highValueCondition.minSpins
-    ) {
-      // Filter out all restricted prizes (500K, 400K, 300K by default)
-      const restrictedValues = highValueCondition.restrictedPrizes || [500000];
-      return available.filter((p) => !restrictedValues.includes(p.value));
-    }
-
-    return available;
+    return prizes.filter((prize) => prize.quantity > 0);
   };
 
   const selectPrize = () => {
+    // Check if current spin number has a scheduled prize
+    const nextSpinNumber = currentSpinNumber + 1;
+    const scheduledPrizeId = scheduledSpins[nextSpinNumber];
+
+    if (scheduledPrizeId) {
+      const scheduledPrize = prizes.find((p) => p.id === scheduledPrizeId);
+      // Verify the prize is still available
+      if (
+        scheduledPrize &&
+        scheduledPrize.quantity > 0 &&
+        scheduledPrize.value <= remainingBudget
+      ) {
+        return scheduledPrize;
+      }
+    }
+
+    // Otherwise, use random selection
     const available = getAvailablePrizes();
 
     // If no prizes available or budget exhausted, return better luck
@@ -207,6 +245,19 @@ export const PrizeProvider = ({ children }) => {
 
   const spin = () => {
     const selectedPrize = selectPrize();
+    const nextSpinNumber = currentSpinNumber + 1;
+
+    // Increment spin counter
+    setCurrentSpinNumber(nextSpinNumber);
+
+    // Remove the scheduled spin if it was just used
+    if (scheduledSpins[nextSpinNumber]) {
+      setScheduledSpins((prev) => {
+        const updated = { ...prev };
+        delete updated[nextSpinNumber];
+        return updated;
+      });
+    }
 
     // Update prize quantity if not "better luck"
     if (selectedPrize.id !== 0) {
@@ -223,21 +274,9 @@ export const PrizeProvider = ({ children }) => {
       timestamp: new Date().toISOString(),
       prize: selectedPrize.label,
       amount: selectedPrize.value,
+      spinNumber: nextSpinNumber,
     };
     setSpinHistory((prev) => [spinRecord, ...prev]);
-
-    // Update high-value spin counter
-    setHighValueSpinCount((prev) => {
-      const newCount = prev + 1;
-      // Reset counter if we reached the max threshold
-      if (
-        highValueCondition.enabled &&
-        newCount >= highValueCondition.maxSpins
-      ) {
-        return 0;
-      }
-      return newCount;
-    });
 
     return selectedPrize;
   };
@@ -252,7 +291,8 @@ export const PrizeProvider = ({ children }) => {
     setPrizes(DEFAULT_PRIZES);
     setSpentAmount(0);
     setSpinHistory([]);
-    setHighValueSpinCount(0);
+    setCurrentSpinNumber(0);
+    setScheduledSpins({});
     localStorage.clear();
   };
 
@@ -262,8 +302,9 @@ export const PrizeProvider = ({ children }) => {
     spentAmount,
     remainingBudget,
     spinHistory,
-    highValueCondition,
-    setHighValueCondition,
+    currentSpinNumber,
+    scheduledSpins,
+    setScheduledSpins,
     spin,
     updatePrize,
     resetSystem,
